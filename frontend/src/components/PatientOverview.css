@@ -1,0 +1,109 @@
+.overview-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Summary banner */
+.summary-banner {
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.summary-banner.living {
+  background: linear-gradient(135deg, var(--teal-faint) 0%, var(--teal-light) 100%);
+  border: 1px solid var(--teal-mid);
+}
+
+.summary-banner.deceased {
+  background: linear-gradient(135deg, #FEF6F5 0%, #FDECEA 100%);
+  border: 1px solid #E8A8A0;
+}
+
+.summary-banner-left { display: flex; flex-direction: column; gap: 4px; }
+
+.summary-patient-id {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.summary-patient-id .mono {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+}
+
+.summary-descriptors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.summary-descriptors .sep {
+  color: var(--text-muted);
+}
+
+.summary-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Overview grid */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.overview-section {}
+
+/* Info grid */
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--bg-subtle);
+  gap: 16px;
+}
+
+.info-row:last-child { border-bottom: none; }
+
+.info-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  padding-top: 1px;
+  min-width: 120px;
+}
+
+.info-value {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: right;
+  text-transform: capitalize;
+}
+
+.info-value.mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: none;
+}

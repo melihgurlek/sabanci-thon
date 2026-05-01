@@ -1,0 +1,93 @@
+.explanation-panel {}
+
+.explanation-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.exp-section { display: flex; flex-direction: column; gap: 8px; }
+
+.exp-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.exp-section p {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.exp-section p strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tier-label { font-weight: 700; }
+.tier-low    { color: var(--risk-safe); }
+.tier-moderate { color: var(--risk-moderate); }
+.tier-high   { color: var(--risk-high); }
+.tier-unknown { color: var(--text-muted); }
+
+/* Factor list */
+.exp-factor-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exp-factor-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+}
+
+.factor-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.factor-dot.risk    { background: var(--risk-high); }
+.factor-dot.protect { background: var(--risk-safe); }
+
+/* Abnormal chips */
+.abnormal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.abnormal-chip {
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.chip-high { background: var(--status-high-bg); color: var(--status-high); }
+.chip-low  { background: var(--status-low-bg);  color: var(--status-low); }
+
+/* Warning section */
+.exp-warning {
+  background: var(--status-low-bg);
+  border: 1px solid #D4A853;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+.exp-warning .exp-section-title { color: var(--status-low); }
+
+/* Disclaimer */
+.exp-disclaimer {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}

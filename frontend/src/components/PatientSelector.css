@@ -1,0 +1,224 @@
+.patient-selector {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Demo shortcuts */
+.demo-shortcuts {
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.demo-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.demo-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.demo-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  cursor: pointer;
+  transition: all 0.15s;
+  gap: 2px;
+}
+.demo-btn:hover { background: var(--bg-hover); border-color: var(--teal-mid); }
+.demo-btn.active { background: var(--teal-light); border-color: var(--teal-mid); }
+
+.demo-btn-num {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.demo-btn.active .demo-btn-num { color: var(--teal-deep); }
+
+.demo-btn-id {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+.demo-btn.active .demo-btn-id { color: var(--teal-deep); font-weight: 500; }
+
+/* Search */
+.selector-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-icon {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  outline: none;
+}
+.search-input::placeholder { color: var(--text-muted); }
+
+.search-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1rem;
+  padding: 0 2px;
+  line-height: 1;
+}
+.search-clear:hover { color: var(--text-secondary); }
+
+/* Filter pills */
+.filter-pills {
+  display: flex;
+  gap: 4px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s;
+  text-transform: capitalize;
+}
+.filter-pill:hover { background: var(--bg-hover); }
+.filter-pill.active {
+  background: var(--teal-light);
+  border-color: var(--teal-mid);
+  color: var(--teal-deep);
+}
+
+/* Patient list */
+.patient-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.selector-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* Patient row */
+.patient-row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.12s;
+}
+.patient-row:hover { background: var(--bg-hover); border-color: var(--border); }
+.patient-row.selected {
+  background: var(--teal-light);
+  border-color: var(--teal-mid);
+}
+
+.patient-row-id {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.patient-id-num {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.patient-row.selected .patient-id-num { color: var(--teal-deep); }
+
+.patient-status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.patient-row-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.patient-row-site {
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.patient-row-stage {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.patient-row-bar-wrap {
+  height: 3px;
+  background: var(--bg-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.patient-row-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--risk-safe), var(--risk-high));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  max-width: 100%;
+}
+
+/* Footer */
+.selector-footer {
+  padding: 8px 14px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
