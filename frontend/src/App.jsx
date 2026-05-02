@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import './App.css'
 import PatientSelector from './components/PatientSelector'
 import PatientOverview from './components/PatientOverview'
@@ -8,14 +8,16 @@ import RiskAssessment from './components/RiskAssessment'
 import ExplanationPanel from './components/ExplanationPanel'
 import WhatIfMode from './components/WhatIfMode'
 import AIChatPanel from './components/AIChatPanel'
+import TwinsPanel from './components/TwinsPanel'
 
 const TABS = [
-  { id: 'overview',     label: 'Overview' },
-  { id: 'biomarkers',   label: 'Biomarkers' },
-  { id: 'risk',         label: 'Risk Assessment' },
-  { id: 'explanation',  label: 'Explanation' },
-  { id: 'whatif',       label: 'What-If' },
-  { id: 'ai',           label: 'AI Assistant' },
+  { id: 'overview', label: 'Overview' },
+  { id: 'biomarkers', label: 'Biomarkers' },
+  { id: 'risk', label: 'Risk Assessment' },
+  { id: 'explanation', label: 'Explanation' },
+  { id: 'whatif', label: 'What-If' },
+  { id: 'ai', label: 'AI Assistant' },
+  { id: 'twins', label: 'Twins' },
 ]
 
 function SettingsPopover({ onClose }) {
@@ -55,6 +57,7 @@ function SettingsPopover({ onClose }) {
 }
 
 export default function App() {
+  const API_BASE = "http://localhost:8000"
   const [appData, setAppData] = useState(null)
   const [modelMeta, setModelMeta] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -64,34 +67,179 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('overview')
   const [showSettings, setShowSettings] = useState(false)
 
+  // ============ twins ============
+  const [data, setData] = useState(null);
+  const [graphData, setGraphData] = useState({ nodes: [], links: [] });
+  const [twinDataLoading, setTwinDataLoading] = useState(false);
+  const [hoveredNode, setHoveredNode] = useState(null);
+  const [graphClickBanner, setGraphClickBanner] = useState(null); // { id, label }
+
+  const [patients2, setPatients2] = useState([]);
+
+  // Track pending requests to prevent race conditions
+  const abortControllerRef = useRef(null);
+  const selectPatientTimeoutRef = useRef(null);
+  const pendingPatientIdRef = useRef(null);
+  const isInitialLoadRef = useRef(true);
+
+  const handleSelectPatient = useCallback((id, skipDebounce = false) => {
+    // Cancel previous request if any
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Clear any pending timeout
+    if (selectPatientTimeoutRef.current) {
+      clearTimeout(selectPatientTimeoutRef.current);
+    }
+
+    const executeRequest = () => {
+      const trim_id = id.replace(/^0+/, '') || '0';
+      const formattedId = '0'.repeat(3 - trim_id.length) + trim_id;
+
+      // Only update if this is still the most recent selection
+      if (pendingPatientIdRef.current !== formattedId) {
+        pendingPatientIdRef.current = formattedId;
+        setSelectedPatientId(formattedId);
+        // Only reset tab on subsequent selections, not on initial load
+        if (!isInitialLoadRef.current) {
+          setActiveTab('overview');
+        }
+        setGraphClickBanner(null);
+        setTwinDataLoading(true);
+
+        // Create new AbortController for this request
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        fetch(`${API_BASE}/api/predict/${trim_id}`, { signal: controller.signal })
+          .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+          .then(d => {
+            // Only update state if this request wasn't aborted
+            if (!controller.signal.aborted) {
+              setData(d);
+              if (d.graph) {
+                // Normalise edge weights for rendering
+                const weights = (d.graph.links || []).map(l => l.value);
+                const maxW = Math.max(...weights, 0.0001);
+                const links = (d.graph.links || []).map(l => ({ ...l, normValue: l.value / maxW }));
+                setGraphData({ nodes: d.graph.nodes || [], links });
+              }
+              setLoading(false);
+              setTwinDataLoading(false);
+            }
+          })
+          .catch(err => {
+            // Ignore abort errors
+            if (err.name !== 'AbortError') {
+              setLoading(false);
+              setTwinDataLoading(false);
+            }
+          });
+      }
+    };
+
+    // Skip debounce for initial load or when explicitly requested
+    if (skipDebounce || isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      executeRequest();
+    } else {
+      // Debounce rapid clicks to prevent multiple requests
+      selectPatientTimeoutRef.current = setTimeout(executeRequest, 100);
+    }
+  }, [API_BASE]);
+
+  const nodeColor = useCallback((node) => {
+    if (node.id === selectedPatientId || node.type === 'target') return '#ff4b4b';
+    return node.survival === 'living' ? '#00d4ff' : '#94a3b8';
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPatientId]);
+
+  const handleNodeClick = useCallback((node) => {
+    // Ignore the current target node
+    if (node.type === 'target') return;
+
+    // Show a brief banner, then fire a full patient selection
+    setGraphClickBanner({ id: node.id, label: node.label });
+    setTimeout(() => setGraphClickBanner(null), 2500);
+
+    // Trigger patient selection
+    handleSelectPatient(node.id);
+  }, [handleSelectPatient]);
+
+  // ============ END twins ============
+
+  // Init app data
   useEffect(() => {
-    Promise.all([
-      fetch('/data/patients_with_predictions.json').then(r => r.json()),
-      fetch('/data/model_metadata.json').then(r => r.json()),
-    ])
-      .then(([data, meta]) => {
+    fetch(`${API_BASE}/api/patientInfo`)
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(j => {
+        const data = j.output;
+        const meta = j.model_metadata;
         setAppData(data)
         setModelMeta(meta)
-        // Default to first demo patient
-        if (data.demo_patient_ids?.length > 0) {
-          setSelectedPatientId(data.demo_patient_ids[0])
-        } else if (data.patients?.length > 0) {
-          setSelectedPatientId(data.patients[0].patient_id)
-        }
         setLoading(false)
       })
       .catch(err => {
         setError(err.message)
         setLoading(false)
       })
-  }, [])
+  }, [API_BASE]);
+
+  // Load initial patient "001" on mount only once
+  useEffect(() => {
+    isInitialLoadRef.current = true;
+    pendingPatientIdRef.current = '001';
+    setSelectedPatientId('001');
+    
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    
+    setTwinDataLoading(true);
+    fetch('http://localhost:8000/api/predict/1', { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(d => {
+        if (!controller.signal.aborted) {
+          setData(d);
+          if (d.graph) {
+            const weights = (d.graph.links || []).map(l => l.value);
+            const maxW = Math.max(...weights, 0.0001);
+            const links = (d.graph.links || []).map(l => ({ ...l, normValue: l.value / maxW }));
+            setGraphData({ nodes: d.graph.nodes || [], links });
+          }
+          setTwinDataLoading(false);
+        }
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          setTwinDataLoading(false);
+        }
+      });
+  }, []); // Runs only once on mount
+
+  // Load twin patients list
+  useEffect(() => {
+    fetch(`${API_BASE}/api/patients`)
+      .then(r => r.json())
+      .then(d => {
+        setPatients2(d.patients || []);
+      })
+      .catch(() => { });
+  }, [API_BASE]);
 
   const selectedPatient = appData?.patients?.find(p => p.patient_id === selectedPatientId) ?? null
 
-  const handleSelectPatient = useCallback(id => {
-    setSelectedPatientId(id)
-    setActiveTab('overview')
-  }, [])
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (selectPatientTimeoutRef.current) {
+        clearTimeout(selectPatientTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -210,6 +358,24 @@ export default function App() {
                     patient={selectedPatient}
                     modelMeta={modelMeta}
                     analyteMeta={appData.analyte_metadata}
+                  />
+                )}
+                {activeTab == 'twins' && (
+                  <TwinsPanel
+                    selectedPatient={selectedPatient}
+                    data={data}
+                    setData={setData}
+                    graphData={graphData}
+                    setGraphData={setGraphData}
+                    hoveredNode={hoveredNode}
+                    setHoveredNode={setHoveredNode}
+                    graphClickBanner={graphClickBanner}
+                    setGraphClickBanner={setGraphClickBanner}
+                    patients={patients2}
+                    setPatients={setPatients2}
+                    handleNodeClick={handleNodeClick}
+                    nodeColor={nodeColor}
+                    twinDataLoading={twinDataLoading}
                   />
                 )}
               </div>
