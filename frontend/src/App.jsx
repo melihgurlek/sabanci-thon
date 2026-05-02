@@ -15,6 +15,8 @@ const TABS = [
   { id: 'ai',           label: 'AI Assistant' },
 ]
 
+const STORAGE_KEY = 'neurobridge_patients'
+
 function SettingsPopover({ onClose }) {
   const [key, setKey] = useState(() => localStorage.getItem('deepseek_api_key') || '')
 
@@ -53,14 +55,29 @@ function SettingsPopover({ onClose }) {
 
 export default function App() {
   const [appData, setAppData] = useState(null)
-  const [patients, setPatients] = useState([])
+  const [patients, setPatients] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    return saved ? JSON.parse(saved) : []
+  })
   const [modelMeta, setModelMeta] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const [selectedPatientId, setSelectedPatientId] = useState(null)
+  const [selectedPatientId, setSelectedPatientId] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      return parsed.length > 0 ? parsed[0].patient_id : null
+    }
+    return null
+  })
   const [activeTab, setActiveTab] = useState('overview')
   const [showSettings, setShowSettings] = useState(false)
+
+  // Persist patients to LocalStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(patients))
+  }, [patients])
 
   useEffect(() => {
     Promise.all([
@@ -69,7 +86,6 @@ export default function App() {
     ])
       .then(([data, meta]) => {
         setAppData(data)
-        setPatients([])
         setModelMeta(meta)
         setLoading(false)
       })
@@ -121,7 +137,7 @@ export default function App() {
       <div className="loading-screen">
         <div className="spinner" />
         <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.9rem' }}>
-          Loading patient data…
+          Loading application data…
         </span>
       </div>
     )
@@ -132,7 +148,7 @@ export default function App() {
       <div className="loading-screen">
         <span style={{ color: 'var(--status-high)' }}>⚠ Failed to load data: {error}</span>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          Ensure patients_with_predictions.json is in public/data/
+          Ensure clinical datasets are present in public/data/
         </span>
       </div>
     )
