@@ -2,18 +2,14 @@ import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import PatientSelector from './components/PatientSelector'
 import PatientOverview from './components/PatientOverview'
-import WhatIfMode from './components/WhatIfMode'
 import AIChatPanel from './components/AIChatPanel'
 import TumorPanel from './components/TumorPanel'
 import DementiaPanel from './components/DementiaPanel'
-import MRIAnalysis from './components/MRIAnalysis'
 
 const TABS = [
   { id: 'overview',  label: 'Overview' },
   { id: 'tumor',     label: 'Tumor' },
   { id: 'dementia',  label: 'Dementia' },
-  { id: 'mri',       label: 'MRI Scan' },
-  { id: 'whatif',    label: 'What-If' },
   { id: 'ai',        label: 'AI Assistant' },
 ]
 
@@ -230,10 +226,9 @@ export default function App() {
               {/* Tab content */}
               <div style={{ animation: 'fadeIn 0.2s ease' }} key={`${selectedPatientId}-${activeTab}`}>
                 {activeTab === 'overview' && (
-                  <PatientOverview 
-                    patient={selectedPatient} 
+                  <PatientOverview
+                    patient={selectedPatient}
                     onUpdate={handleUpdatePatient}
-                    setActiveTab={setActiveTab}
                   />
                 )}
                 {activeTab === 'tumor' && (
@@ -241,15 +236,6 @@ export default function App() {
                 )}
                 {activeTab === 'dementia' && (
                   <DementiaPanel patient={selectedPatient} />
-                )}
-                {activeTab === 'mri' && (
-                  <MRIAnalysis patient={selectedPatient} />
-                )}
-                {activeTab === 'whatif' && (
-                  <WhatIfMode
-                    patient={selectedPatient}
-                    modelMeta={modelMeta}
-                  />
                 )}
                 {activeTab === 'ai' && (
                   <AIChatPanel
