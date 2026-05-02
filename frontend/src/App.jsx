@@ -8,8 +8,7 @@ import DementiaPanel from './components/DementiaPanel'
 
 const TABS = [
   { id: 'overview',  label: 'Overview' },
-  { id: 'tumor',     label: 'Tumor' },
-  { id: 'dementia',  label: 'Dementia' },
+  { id: 'detailed',  label: 'Detailed Analysis' },
   { id: 'ai',        label: 'AI Assistant' },
 ]
 
@@ -83,6 +82,7 @@ export default function App() {
     return null
   })
   const [activeTab, setActiveTab] = useState('overview')
+  const [analysisMode, setAnalysisMode] = useState('tumor')
   const [showSettings, setShowSettings] = useState(false)
 
   // Persist patients to LocalStorage whenever they change
@@ -229,13 +229,14 @@ export default function App() {
                   <PatientOverview
                     patient={selectedPatient}
                     onUpdate={handleUpdatePatient}
+                    analysisMode={analysisMode}
+                    setAnalysisMode={setAnalysisMode}
                   />
                 )}
-                {activeTab === 'tumor' && (
-                  <TumorPanel patient={selectedPatient} />
-                )}
-                {activeTab === 'dementia' && (
-                  <DementiaPanel patient={selectedPatient} />
+                {activeTab === 'detailed' && (
+                  analysisMode === 'tumor' 
+                    ? <TumorPanel patient={selectedPatient} />
+                    : <DementiaPanel patient={selectedPatient} />
                 )}
                 {activeTab === 'ai' && (
                   <AIChatPanel
