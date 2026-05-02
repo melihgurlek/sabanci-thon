@@ -6,22 +6,26 @@ import WhatIfMode from './components/WhatIfMode'
 import AIChatPanel from './components/AIChatPanel'
 import TumorPanel from './components/TumorPanel'
 import DementiaPanel from './components/DementiaPanel'
+import MRIAnalysis from './components/MRIAnalysis'
 
 const TABS = [
-  { id: 'overview',     label: 'Overview' },
-  { id: 'tumor',        label: 'Tumor' },
-  { id: 'dementia',     label: 'Dementia' },
-  { id: 'whatif',       label: 'What-If' },
-  { id: 'ai',           label: 'AI Assistant' },
+  { id: 'overview',  label: 'Overview' },
+  { id: 'tumor',     label: 'Tumor' },
+  { id: 'dementia',  label: 'Dementia' },
+  { id: 'mri',       label: 'MRI Scan' },
+  { id: 'whatif',    label: 'What-If' },
+  { id: 'ai',        label: 'AI Assistant' },
 ]
 
 const STORAGE_KEY = 'neurobridge_patients'
 
 function SettingsPopover({ onClose }) {
-  const [key, setKey] = useState(() => localStorage.getItem('deepseek_api_key') || '')
+  const [key, setKey]       = useState(() => localStorage.getItem('deepseek_api_key') || '')
+  const [apiUrl, setApiUrl] = useState(() => localStorage.getItem('neurobridge_api_url') || '')
 
   const save = () => {
     localStorage.setItem('deepseek_api_key', key.trim())
+    localStorage.setItem('neurobridge_api_url', apiUrl.trim())
     onClose()
   }
 
@@ -40,9 +44,20 @@ function SettingsPopover({ onClose }) {
             onKeyDown={e => e.key === 'Enter' && save()}
           />
         </div>
+        <div className="settings-field">
+          <label>NeuroBridge Backend URL</label>
+          <input
+            type="text"
+            value={apiUrl}
+            onChange={e => setApiUrl(e.target.value)}
+            placeholder="http://localhost:8000"
+            onKeyDown={e => e.key === 'Enter' && save()}
+          />
+        </div>
         <p className="settings-note">
-          Your key is stored only in your browser's local storage and never sent
-          anywhere except the DeepSeek API. Required for the AI Assistant tab.
+          Values are stored only in your browser's local storage. The DeepSeek key
+          is required for the AI Assistant tab. The NeuroBridge URL points to the
+          FastAPI backend used for MRI Scan analysis (defaults to localhost:8000).
         </p>
         <div className="settings-actions">
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
@@ -226,6 +241,9 @@ export default function App() {
                 )}
                 {activeTab === 'dementia' && (
                   <DementiaPanel patient={selectedPatient} />
+                )}
+                {activeTab === 'mri' && (
+                  <MRIAnalysis patient={selectedPatient} />
                 )}
                 {activeTab === 'whatif' && (
                   <WhatIfMode
