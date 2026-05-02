@@ -5,6 +5,8 @@ import PatientOverview from './components/PatientOverview'
 import ExplanationPanel from './components/ExplanationPanel'
 import WhatIfMode from './components/WhatIfMode'
 import AIChatPanel from './components/AIChatPanel'
+import TumorPanel from './components/TumorPanel'
+import DementiaPanel from './components/DementiaPanel'
 
 const TABS = [
   { id: 'overview',     label: 'Overview' },
@@ -209,16 +211,10 @@ export default function App() {
                   />
                 )}
                 {activeTab === 'tumor' && (
-                  <div className="empty-state">
-                    <h3>Tumor Analysis</h3>
-                    <p>Analysis details will appear here after processing.</p>
-                  </div>
+                  <TumorPanel patient={selectedPatient} />
                 )}
                 {activeTab === 'dementia' && (
-                  <div className="empty-state">
-                    <h3>Dementia Analysis</h3>
-                    <p>Analysis details will appear here after processing.</p>
-                  </div>
+                  <DementiaPanel patient={selectedPatient} />
                 )}
                 {activeTab === 'whatif' && (
                   <WhatIfMode
