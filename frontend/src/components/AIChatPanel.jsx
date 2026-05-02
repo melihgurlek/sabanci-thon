@@ -34,6 +34,16 @@ function buildSystemPrompt(patient, modelMeta, analyteMeta) {
     .map(f => `${f.label}: ${f.direction === 'increases_risk' ? '▲' : '▼'} (contribution: ${f.contribution})`)
     .join('; ')
 
+  // Brain MRI specific results if available
+  const mri = patient.mri_results
+  const mriContext = mri ? `
+## Brain MRI Analysis (NeuroBridge)
+- Alzheimer Staging: ${mri.alzheimer?.finding || 'N/A'} (Confidence: ${Math.round(mri.alzheimer?.confidence * 100)}%)
+- Tumor Classification: ${mri.tumor?.finding || 'N/A'} (Confidence: ${Math.round(mri.tumor?.confidence * 100)}%)
+- Primary Observation: ${mri.primary_task || 'N/A'}
+- Clinical Note: ${mri.clinical_note || 'N/A'}
+` : ''
+
   return `You are a clinical decision support assistant for a Head & Neck Squamous Cell Carcinoma (HNSCC) tool.
 
 ## Current Patient Data
@@ -47,6 +57,7 @@ function buildSystemPrompt(patient, modelMeta, analyteMeta) {
 - Survival status: ${patient.survival_status}
 - Recurrence: ${patient.recurrence}${patient.days_to_recurrence ? ` (day ${patient.days_to_recurrence})` : ''}
 - Metastasis: ${patient.metastasis_locations?.join(', ') || 'none recorded'}
+${mriContext}
 
 ## Model Predictions
 - Survival (mortality) probability: ${Math.round(patient.survival_prob * 100)}% → ${survTier} risk
@@ -109,6 +120,7 @@ export default function AIChatPanel({ patient, modelMeta, analyteMeta }) {
   const abortRef = useRef(null)
 
   const apiKey = localStorage.getItem('deepseek_api_key') || ''
+  const hasAnalysis = !!patient.mri_results
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -121,7 +133,7 @@ export default function AIChatPanel({ patient, modelMeta, analyteMeta }) {
   }, [patient.patient_id])
 
   const sendMessage = useCallback(async (text) => {
-    if (!text.trim() || isLoading) return
+    if (!text.trim() || isLoading || !hasAnalysis) return
 
     const userMsg = { role: 'user', content: text.trim() }
     setMessages(prev => [...prev, userMsg])
@@ -232,7 +244,7 @@ export default function AIChatPanel({ patient, modelMeta, analyteMeta }) {
       setIsLoading(false)
       abortRef.current = null
     }
-  }, [patient, modelMeta, analyteMeta, messages, isLoading, apiKey])
+  }, [patient, modelMeta, analyteMeta, messages, isLoading, apiKey, hasAnalysis])
 
   function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -243,6 +255,29 @@ export default function AIChatPanel({ patient, modelMeta, analyteMeta }) {
 
   function stopGeneration() {
     abortRef.current?.abort()
+  }
+
+  if (!hasAnalysis) {
+    return (
+      <div className="chat-panel disabled">
+        <div className="chat-panel-header">
+          <div className="chat-panel-title">AI Assistant</div>
+        </div>
+        <div className="chat-messages" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="chat-welcome" style={{ maxWidth: '400px' }}>
+            <div className="welcome-icon">🧠</div>
+            <h3>Analysis Required</h3>
+            <p>The AI Assistant requires brain MRI analysis results to provide clinical context.</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '12px' }}>
+              Please go to the <strong>Overview</strong> tab, upload a brain MRI scan, and click <strong>"Analyse"</strong> to begin.
+            </p>
+          </div>
+        </div>
+        <div className="chat-input-area" style={{ opacity: 0.5, pointerEvents: 'none' }}>
+          <textarea className="chat-input" placeholder="Analysis required to ask questions…" disabled rows={2} />
+        </div>
+      </div>
+    )
   }
 
   return (
