@@ -4,7 +4,7 @@ import './AIChatPanel.css'
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions'
 const MODEL = 'deepseek-chat'
 
-function buildSystemPrompt(patient, modelMeta, analyteMeta) {
+function buildSystemPrompt(patient, modelMeta, analyteMeta, personalityText) {
   const abnormal = Object.entries(patient.biomarker_flags || {})
     .filter(([, f]) => f === 'high' || f === 'low')
     .map(([name, f]) => `${name}: ${f.toUpperCase()}`)
@@ -44,7 +44,7 @@ function buildSystemPrompt(patient, modelMeta, analyteMeta) {
 - Clinical Note: ${mri.clinical_note || 'N/A'}
 ` : ''
 
-  return `You are a clinical decision support assistant for a Head & Neck Squamous Cell Carcinoma (HNSCC) tool.
+  const basePrompt = `You are a clinical decision support assistant for a Head & Neck Squamous Cell Carcinoma (HNSCC) tool.
 
 ## Current Patient Data
 - Patient ID: ${patient.patient_id}
@@ -72,16 +72,9 @@ ${topRecFactors || 'Not available'}
 
 ## Abnormal Biomarkers
 ${abnormal || 'None flagged'}
+`
 
-## Instructions
-- Answer clinical questions about this patient concisely and clearly.
-- Always clarify you are a decision support tool, not a replacement for clinical judgment.
-- Never make definitive diagnoses. Use language like "the model suggests", "this may indicate", "clinically associated with".
-- When explaining model predictions, reference the specific top factors.
-- When asked about biomarkers, explain what elevated or low values mean in the HNSCC context.
-- For "what if" questions, reason through the clinical logic but be explicit about uncertainty.
-- Keep responses focused and structured. Use bullet points for lists.
-- Always end responses that involve risk interpretation with a brief disclaimer.`
+  return personalityText ? `${personalityText}\n\n${basePrompt}` : basePrompt
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -115,6 +108,7 @@ export default function AIChatPanel({ patient, modelMeta, analyteMeta }) {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [apiError, setApiError] = useState(null)
+  const [personalityText, setPersonalityText] = useState('')
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
   const abortRef = useRef(null)
@@ -125,6 +119,14 @@ export default function AIChatPanel({ patient, modelMeta, analyteMeta }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Load personality text
+  useEffect(() => {
+    fetch('/personality.txt')
+      .then(r => r.text())
+      .then(t => setPersonalityText(t))
+      .catch(err => console.error('Failed to load personality.txt:', err))
+  }, [])
 
   // Reset messages when patient changes
   useEffect(() => {
@@ -150,21 +152,36 @@ export default function AIChatPanel({ patient, modelMeta, analyteMeta }) {
       return
     }
 
-    const systemPrompt = buildSystemPrompt(patient, modelMeta, analyteMeta)
+    const systemPrompt = buildSystemPrompt(patient, modelMeta, analyteMeta, personalityText)
     const history = messages
       .filter(m => !m.streaming)
       .map(m => ({ role: m.role, content: m.content }))
+
+    // Construct the patient data string for inclusion in the user prompt
+    const patientData = [
+      `Age: ${patient.age || 'N/A'}`,
+      `Sex: ${patient.sex || 'N/A'}`,
+      `Handedness: ${patient.handedness || 'N/A'}`,
+      `Education: ${patient.education || 'N/A'}`,
+      `Genetic Biomarkers: ${patient.genetic_biomarkers || 'N/A'}`,
+      `CV History: ${patient.cv_history || 'N/A'}`,
+      `Previous Cancers: ${patient.cancer_history?.join(', ') || 'None'}`,
+      `Tumor Site: ${patient.primary_tumor_site || 'N/A'}`,
+      `Stage: ${patient.pT_stage || 'N/A'}/${patient.pN_stage || 'N/A'}`,
+      `Grade: ${patient.grading || 'N/A'}`,
+      `HPV Status: ${patient.hpv_association_p16 || 'N/A'}`
+    ].join(', ')
 
     const body = {
       model: MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         ...history,
-        { role: 'user', content: text.trim() },
+        { role: 'user', content: `<patient_data> ${patientData} </patient_data> ${text.trim()}` },
       ],
       stream: true,
-      max_tokens: 800,
-      temperature: 0.3,
+      max_tokens: 1000,
+      temperature: 0.1,
     }
 
     const placeholderId = Date.now()
@@ -244,7 +261,7 @@ export default function AIChatPanel({ patient, modelMeta, analyteMeta }) {
       setIsLoading(false)
       abortRef.current = null
     }
-  }, [patient, modelMeta, analyteMeta, messages, isLoading, apiKey, hasAnalysis])
+  }, [patient, modelMeta, analyteMeta, messages, isLoading, apiKey, hasAnalysis, personalityText])
 
   function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
