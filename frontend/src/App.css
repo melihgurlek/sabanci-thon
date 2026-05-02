@@ -162,6 +162,13 @@
 }
 .btn-ghost:hover { background: var(--bg-subtle); color: var(--text-primary); }
 
+.btn-danger {
+  background: transparent;
+  color: var(--status-high);
+  border-color: #FECACA;
+}
+.btn-danger:hover { background: #FEF2F2; border-color: var(--status-high); }
+
 .btn-sm { padding: 5px 12px; font-size: 0.78rem; }
 
 /* ─── Badge ───────────────────────────────────────────────────────────────── */

@@ -2,16 +2,20 @@ import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import PatientSelector from './components/PatientSelector'
 import PatientOverview from './components/PatientOverview'
-import ExplanationPanel from './components/ExplanationPanel'
 import WhatIfMode from './components/WhatIfMode'
 import AIChatPanel from './components/AIChatPanel'
+import TumorPanel from './components/TumorPanel'
+import DementiaPanel from './components/DementiaPanel'
 
 const TABS = [
   { id: 'overview',     label: 'Overview' },
-  { id: 'explanation',  label: 'Explanation' },
+  { id: 'tumor',        label: 'Tumor' },
+  { id: 'dementia',     label: 'Dementia' },
   { id: 'whatif',       label: 'What-If' },
   { id: 'ai',           label: 'AI Assistant' },
 ]
+
+const STORAGE_KEY = 'neurobridge_patients'
 
 function SettingsPopover({ onClose }) {
   const [key, setKey] = useState(() => localStorage.getItem('deepseek_api_key') || '')
@@ -51,14 +55,29 @@ function SettingsPopover({ onClose }) {
 
 export default function App() {
   const [appData, setAppData] = useState(null)
-  const [patients, setPatients] = useState([])
+  const [patients, setPatients] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    return saved ? JSON.parse(saved) : []
+  })
   const [modelMeta, setModelMeta] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const [selectedPatientId, setSelectedPatientId] = useState(null)
+  const [selectedPatientId, setSelectedPatientId] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      return parsed.length > 0 ? parsed[0].patient_id : null
+    }
+    return null
+  })
   const [activeTab, setActiveTab] = useState('overview')
   const [showSettings, setShowSettings] = useState(false)
+
+  // Persist patients to LocalStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(patients))
+  }, [patients])
 
   useEffect(() => {
     Promise.all([
@@ -67,8 +86,6 @@ export default function App() {
     ])
       .then(([data, meta]) => {
         setAppData(data)
-        // List starts empty, only showing manually added patients
-        setPatients([])
         setModelMeta(meta)
         setLoading(false)
       })
@@ -95,16 +112,20 @@ export default function App() {
     const newId = `NEW-${Math.random().toString(36).substr(2, 4).toUpperCase()}`
     const newPatient = {
       patient_id: newId,
+      name: '',
+      dob: '',
+      sex: '',
+      handedness: '',
+      education: '',
+      genetic_biomarkers: '',
+      cv_history: 'no',
+      cancer_history: [],
+      image_url: null,
       survival_status: 'living',
       recurrence: 'no',
       blood_completeness: 0,
       blood_analyte_count: 0,
       analyte_values: {},
-      primary_tumor_site: null,
-      pT_stage: null,
-      pN_stage: null,
-      age: null,
-      sex: null,
     }
     setPatients(prev => [newPatient, ...prev])
     setSelectedPatientId(newId)
@@ -116,7 +137,7 @@ export default function App() {
       <div className="loading-screen">
         <div className="spinner" />
         <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.9rem' }}>
-          Loading patient data…
+          Loading application data…
         </span>
       </div>
     )
@@ -127,7 +148,7 @@ export default function App() {
       <div className="loading-screen">
         <span style={{ color: 'var(--status-high)' }}>⚠ Failed to load data: {error}</span>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          Ensure patients_with_predictions.json is in public/data/
+          Ensure clinical datasets are present in public/data/
         </span>
       </div>
     )
@@ -197,13 +218,14 @@ export default function App() {
                   <PatientOverview 
                     patient={selectedPatient} 
                     onUpdate={handleUpdatePatient}
+                    setActiveTab={setActiveTab}
                   />
                 )}
-                {activeTab === 'explanation' && (
-                  <ExplanationPanel
-                    patient={selectedPatient}
-                    modelMeta={modelMeta}
-                  />
+                {activeTab === 'tumor' && (
+                  <TumorPanel patient={selectedPatient} />
+                )}
+                {activeTab === 'dementia' && (
+                  <DementiaPanel patient={selectedPatient} />
                 )}
                 {activeTab === 'whatif' && (
                   <WhatIfMode
