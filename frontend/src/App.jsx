@@ -9,6 +9,8 @@ import AIChatPanel from './components/AIChatPanel'
 const TABS = [
   { id: 'overview',     label: 'Overview' },
   { id: 'explanation',  label: 'Explanation' },
+  { id: 'tumor',        label: 'Tumor' },
+  { id: 'dementia',     label: 'Dementia' },
   { id: 'whatif',       label: 'What-If' },
   { id: 'ai',           label: 'AI Assistant' },
 ]
@@ -197,6 +199,7 @@ export default function App() {
                   <PatientOverview 
                     patient={selectedPatient} 
                     onUpdate={handleUpdatePatient}
+                    setActiveTab={setActiveTab}
                   />
                 )}
                 {activeTab === 'explanation' && (
@@ -204,6 +207,18 @@ export default function App() {
                     patient={selectedPatient}
                     modelMeta={modelMeta}
                   />
+                )}
+                {activeTab === 'tumor' && (
+                  <div className="empty-state">
+                    <h3>Tumor Analysis</h3>
+                    <p>Analysis details will appear here after processing.</p>
+                  </div>
+                )}
+                {activeTab === 'dementia' && (
+                  <div className="empty-state">
+                    <h3>Dementia Analysis</h3>
+                    <p>Analysis details will appear here after processing.</p>
+                  </div>
                 )}
                 {activeTab === 'whatif' && (
                   <WhatIfMode
