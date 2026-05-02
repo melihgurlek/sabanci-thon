@@ -2,17 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import PatientSelector from './components/PatientSelector'
 import PatientOverview from './components/PatientOverview'
-import BloodTrend from './components/BloodTrend'
-import BiomarkerPanel from './components/BiomarkerPanel'
-import RiskAssessment from './components/RiskAssessment'
 import ExplanationPanel from './components/ExplanationPanel'
 import WhatIfMode from './components/WhatIfMode'
 import AIChatPanel from './components/AIChatPanel'
 
 const TABS = [
   { id: 'overview',     label: 'Overview' },
-  { id: 'biomarkers',   label: 'Biomarkers' },
-  { id: 'risk',         label: 'Risk Assessment' },
   { id: 'explanation',  label: 'Explanation' },
   { id: 'whatif',       label: 'What-If' },
   { id: 'ai',           label: 'AI Assistant' },
@@ -88,6 +83,12 @@ export default function App() {
   const handleSelectPatient = useCallback(id => {
     setSelectedPatientId(id)
     setActiveTab('overview')
+  }, [])
+
+  const handleUpdatePatient = useCallback((updatedPatient) => {
+    setPatients(prev => prev.map(p => 
+      p.patient_id === updatedPatient.patient_id ? updatedPatient : p
+    ))
   }, [])
 
   const handleAddPatient = useCallback(() => {
@@ -193,21 +194,9 @@ export default function App() {
               {/* Tab content */}
               <div style={{ animation: 'fadeIn 0.2s ease' }} key={`${selectedPatientId}-${activeTab}`}>
                 {activeTab === 'overview' && (
-                  <>
-                    <PatientOverview patient={selectedPatient} />
-                    <BloodTrend patient={selectedPatient} />
-                  </>
-                )}
-                {activeTab === 'biomarkers' && (
-                  <BiomarkerPanel
-                    patient={selectedPatient}
-                    analyteMeta={appData.analyte_metadata}
-                  />
-                )}
-                {activeTab === 'risk' && (
-                  <RiskAssessment
-                    patient={selectedPatient}
-                    modelMeta={modelMeta}
+                  <PatientOverview 
+                    patient={selectedPatient} 
+                    onUpdate={handleUpdatePatient}
                   />
                 )}
                 {activeTab === 'explanation' && (
