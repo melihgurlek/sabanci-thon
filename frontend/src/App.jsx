@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import PatientSelector from './components/PatientSelector'
 import PatientOverview from './components/PatientOverview'
-import ExplanationPanel from './components/ExplanationPanel'
 import WhatIfMode from './components/WhatIfMode'
 import AIChatPanel from './components/AIChatPanel'
 import TumorPanel from './components/TumorPanel'
@@ -10,7 +9,6 @@ import DementiaPanel from './components/DementiaPanel'
 
 const TABS = [
   { id: 'overview',     label: 'Overview' },
-  { id: 'explanation',  label: 'Explanation' },
   { id: 'tumor',        label: 'Tumor' },
   { id: 'dementia',     label: 'Dementia' },
   { id: 'whatif',       label: 'What-If' },
@@ -71,7 +69,6 @@ export default function App() {
     ])
       .then(([data, meta]) => {
         setAppData(data)
-        // List starts empty, only showing manually added patients
         setPatients([])
         setModelMeta(meta)
         setLoading(false)
@@ -99,16 +96,20 @@ export default function App() {
     const newId = `NEW-${Math.random().toString(36).substr(2, 4).toUpperCase()}`
     const newPatient = {
       patient_id: newId,
+      name: '',
+      dob: '',
+      sex: '',
+      handedness: '',
+      education: '',
+      genetic_biomarkers: '',
+      cv_history: 'no',
+      cancer_history: [],
+      image_url: null,
       survival_status: 'living',
       recurrence: 'no',
       blood_completeness: 0,
       blood_analyte_count: 0,
       analyte_values: {},
-      primary_tumor_site: null,
-      pT_stage: null,
-      pN_stage: null,
-      age: null,
-      sex: null,
     }
     setPatients(prev => [newPatient, ...prev])
     setSelectedPatientId(newId)
@@ -202,12 +203,6 @@ export default function App() {
                     patient={selectedPatient} 
                     onUpdate={handleUpdatePatient}
                     setActiveTab={setActiveTab}
-                  />
-                )}
-                {activeTab === 'explanation' && (
-                  <ExplanationPanel
-                    patient={selectedPatient}
-                    modelMeta={modelMeta}
                   />
                 )}
                 {activeTab === 'tumor' && (

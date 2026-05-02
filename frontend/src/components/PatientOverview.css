@@ -1,8 +1,104 @@
+.patient-overview-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ─── Demographics Section ───────────────────────────────────────────────── */
+.demographics-section {
+  background: var(--bg-card);
+}
+
+.demographics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-field-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.demo-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.demo-input:focus {
+  outline: none;
+  border-color: var(--teal-mid);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 2px var(--teal-faint);
+}
+
+/* Radio Group */
+.radio-group {
+  display: flex;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* Multi-select Chips */
+.multi-select-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: transparent;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chip-btn:hover {
+  border-color: var(--teal-mid);
+  background: var(--bg-hover);
+}
+
+.chip-btn.active {
+  background: var(--teal-deep);
+  color: white;
+  border-color: var(--teal-deep);
+}
+
+/* ─── Image Portal Section ───────────────────────────────────────────────── */
 .image-overview-container {
   display: flex;
   gap: 20px;
-  height: calc(100vh - 180px);
-  min-height: 500px;
+  height: 450px;
 }
 
 .image-main-wrapper {
