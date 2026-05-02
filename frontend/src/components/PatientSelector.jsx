@@ -42,7 +42,7 @@ function PatientRow({ patient, isSelected, onSelect }) {
   )
 }
 
-export default function PatientSelector({ patients, selectedId, demoIds, onSelect }) {
+export default function PatientSelector({ patients, selectedId, demoIds, onSelect, onAdd }) {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all') // all | living | deceased | recurrence
 
@@ -51,7 +51,7 @@ export default function PatientSelector({ patients, selectedId, demoIds, onSelec
     if (query.trim()) {
       const q = query.trim().toLowerCase()
       list = list.filter(p =>
-        p.patient_id.includes(q) ||
+        p.patient_id.toLowerCase().includes(q) ||
         (p.primary_tumor_site || '').toLowerCase().includes(q) ||
         (p.pT_stage || '').toLowerCase().includes(q)
       )
@@ -62,12 +62,22 @@ export default function PatientSelector({ patients, selectedId, demoIds, onSelec
     return list
   }, [patients, query, filter])
 
-  const demoPatients = patients.filter(p => demoIds.includes(p.patient_id))
+  const demoPatients = useMemo(() => {
+    return patients.filter(p => demoIds.includes(p.patient_id))
+  }, [patients, demoIds])
 
   return (
     <div className="patient-selector">
-      {/* Demo shortcuts */}
-      {demoIds.length > 0 && (
+      {/* Add Patient Button */}
+      <div className="add-patient-container">
+        <button className="add-patient-btn" onClick={onAdd}>
+          <span className="add-patient-icon">+</span>
+          <span>Add Patient Profile</span>
+        </button>
+      </div>
+
+      {/* Demo shortcuts - Only show if any patients match demo IDs */}
+      {demoPatients.length > 0 && (
         <div className="demo-shortcuts">
           <span className="demo-label">Demo patients</span>
           <div className="demo-btns">
@@ -88,37 +98,45 @@ export default function PatientSelector({ patients, selectedId, demoIds, onSelec
         </div>
       )}
 
-      {/* Search */}
-      <div className="selector-search">
-        <span className="search-icon">⌕</span>
-        <input
-          type="text"
-          placeholder="Search ID, site, stage…"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          className="search-input"
-        />
-        {query && (
-          <button className="search-clear" onClick={() => setQuery('')}>×</button>
-        )}
-      </div>
+      {/* Search - Only show if there are patients to search */}
+      {patients.length > 0 && (
+        <>
+          <div className="selector-search">
+            <span className="search-icon">⌕</span>
+            <input
+              type="text"
+              placeholder="Search ID, site, stage…"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              className="search-input"
+            />
+            {query && (
+              <button className="search-clear" onClick={() => setQuery('')}>×</button>
+            )}
+          </div>
 
-      {/* Filter pills */}
-      <div className="filter-pills">
-        {['all', 'living', 'deceased', 'recurrence'].map(f => (
-          <button
-            key={f}
-            className={`filter-pill ${filter === f ? 'active' : ''}`}
-            onClick={() => setFilter(f)}
-          >
-            {f === 'all' ? `All (${patients.length})` : f}
-          </button>
-        ))}
-      </div>
+          <div className="filter-pills">
+            {['all', 'living', 'deceased', 'recurrence'].map(f => (
+              <button
+                key={f}
+                className={`filter-pill ${filter === f ? 'active' : ''}`}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'all' ? `All (${patients.length})` : f}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* List */}
       <div className="patient-list">
-        {filtered.length === 0 ? (
+        {patients.length === 0 ? (
+          <div className="selector-empty">
+            No profiles yet.<br/>
+            Click "+" to add a patient.
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="selector-empty">No patients match your search.</div>
         ) : (
           filtered.map(p => (
@@ -133,7 +151,7 @@ export default function PatientSelector({ patients, selectedId, demoIds, onSelec
       </div>
 
       <div className="selector-footer">
-        {filtered.length} of {patients.length} patients
+        {patients.length} patient profile{patients.length !== 1 ? 's' : ''}
       </div>
     </div>
   )

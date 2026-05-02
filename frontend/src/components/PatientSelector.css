@@ -5,6 +5,46 @@
   overflow: hidden;
 }
 
+/* Add Patient Button */
+.add-patient-container {
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.add-patient-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--teal-deep);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+}
+
+.add-patient-btn:hover {
+  background: #0d8a80;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.3);
+}
+
+.add-patient-btn:active {
+  transform: translateY(0);
+}
+
+.add-patient-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
 /* Demo shortcuts */
 .demo-shortcuts {
   padding: 12px 14px 8px;

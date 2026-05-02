@@ -2,17 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import './App.css'
 import PatientSelector from './components/PatientSelector'
 import PatientOverview from './components/PatientOverview'
-import BloodTrend from './components/BloodTrend'
-import BiomarkerPanel from './components/BiomarkerPanel'
-import RiskAssessment from './components/RiskAssessment'
 import ExplanationPanel from './components/ExplanationPanel'
 import WhatIfMode from './components/WhatIfMode'
 import AIChatPanel from './components/AIChatPanel'
 
 const TABS = [
   { id: 'overview',     label: 'Overview' },
-  { id: 'biomarkers',   label: 'Biomarkers' },
-  { id: 'risk',         label: 'Risk Assessment' },
   { id: 'explanation',  label: 'Explanation' },
   { id: 'whatif',       label: 'What-If' },
   { id: 'ai',           label: 'AI Assistant' },
@@ -56,6 +51,7 @@ function SettingsPopover({ onClose }) {
 
 export default function App() {
   const [appData, setAppData] = useState(null)
+  const [patients, setPatients] = useState([])
   const [modelMeta, setModelMeta] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -71,13 +67,9 @@ export default function App() {
     ])
       .then(([data, meta]) => {
         setAppData(data)
+        // List starts empty, only showing manually added patients
+        setPatients([])
         setModelMeta(meta)
-        // Default to first demo patient
-        if (data.demo_patient_ids?.length > 0) {
-          setSelectedPatientId(data.demo_patient_ids[0])
-        } else if (data.patients?.length > 0) {
-          setSelectedPatientId(data.patients[0].patient_id)
-        }
         setLoading(false)
       })
       .catch(err => {
@@ -86,10 +78,36 @@ export default function App() {
       })
   }, [])
 
-  const selectedPatient = appData?.patients?.find(p => p.patient_id === selectedPatientId) ?? null
+  const selectedPatient = patients.find(p => p.patient_id === selectedPatientId) ?? null
 
   const handleSelectPatient = useCallback(id => {
     setSelectedPatientId(id)
+    setActiveTab('overview')
+  }, [])
+
+  const handleUpdatePatient = useCallback((updatedPatient) => {
+    setPatients(prev => prev.map(p => 
+      p.patient_id === updatedPatient.patient_id ? updatedPatient : p
+    ))
+  }, [])
+
+  const handleAddPatient = useCallback(() => {
+    const newId = `NEW-${Math.random().toString(36).substr(2, 4).toUpperCase()}`
+    const newPatient = {
+      patient_id: newId,
+      survival_status: 'living',
+      recurrence: 'no',
+      blood_completeness: 0,
+      blood_analyte_count: 0,
+      analyte_values: {},
+      primary_tumor_site: null,
+      pT_stage: null,
+      pN_stage: null,
+      age: null,
+      sex: null,
+    }
+    setPatients(prev => [newPatient, ...prev])
+    setSelectedPatientId(newId)
     setActiveTab('overview')
   }, [])
 
@@ -115,7 +133,6 @@ export default function App() {
     )
   }
 
-  const patients = appData.patients ?? []
   const demoIds = appData.demo_patient_ids ?? []
 
   return (
@@ -153,6 +170,7 @@ export default function App() {
             selectedId={selectedPatientId}
             demoIds={demoIds}
             onSelect={handleSelectPatient}
+            onAdd={handleAddPatient}
           />
         </aside>
 
@@ -176,21 +194,9 @@ export default function App() {
               {/* Tab content */}
               <div style={{ animation: 'fadeIn 0.2s ease' }} key={`${selectedPatientId}-${activeTab}`}>
                 {activeTab === 'overview' && (
-                  <>
-                    <PatientOverview patient={selectedPatient} />
-                    <BloodTrend patient={selectedPatient} />
-                  </>
-                )}
-                {activeTab === 'biomarkers' && (
-                  <BiomarkerPanel
-                    patient={selectedPatient}
-                    analyteMeta={appData.analyte_metadata}
-                  />
-                )}
-                {activeTab === 'risk' && (
-                  <RiskAssessment
-                    patient={selectedPatient}
-                    modelMeta={modelMeta}
+                  <PatientOverview 
+                    patient={selectedPatient} 
+                    onUpdate={handleUpdatePatient}
                   />
                 )}
                 {activeTab === 'explanation' && (
@@ -218,7 +224,7 @@ export default function App() {
             <div className="empty-state">
               <span className="empty-state-icon">🔬</span>
               <h3>Select a patient to begin</h3>
-              <p>Choose a patient from the sidebar or use the demo shortcuts to explore the system.</p>
+              <p>Choose a patient from the sidebar or use the "+" button to create a new profile.</p>
             </div>
           )}
         </main>
