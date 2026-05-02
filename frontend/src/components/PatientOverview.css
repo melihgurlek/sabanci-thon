@@ -4,6 +4,57 @@
   gap: 24px;
 }
 
+/* ─── Analysis Mode Selector ─────────────────────────────────────────────── */
+
+.analysis-mode-selector {
+  margin-bottom: -4px;
+}
+
+.mode-tabs {
+  display: flex;
+  padding: 6px;
+  gap: 8px;
+}
+
+.mode-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mode-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.mode-tab.active {
+  background: var(--bg-card);
+  color: var(--teal-deep);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--teal-faint);
+}
+
+.mode-icon {
+  font-size: 1.1rem;
+  opacity: 0.8;
+}
+
+.mode-tab.active .mode-icon {
+  opacity: 1;
+}
+
 /* ─── Demographics ───────────────────────────────────────────────────────── */
 
 .demographics-section { background: var(--bg-card); }

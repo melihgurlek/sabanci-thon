@@ -81,7 +81,7 @@ function ChatBubble({ role, content }) {
   )
 }
 
-export default function PatientOverview({ patient, onUpdate }) {
+export default function PatientOverview({ patient, onUpdate, analysisMode, setAnalysisMode }) {
   const fileInputRef = useRef(null)
   const chatEndRef   = useRef(null)
 
@@ -207,13 +207,38 @@ export default function PatientOverview({ patient, onUpdate }) {
   const mriResults = patient.mri_results || null
   const hasResults = mriResults && !mriResults.error
 
+  const geneticOptions = analysisMode === 'tumor' 
+    ? GENETIC_OPTIONS.filter(opt => opt.includes('BRCA') || opt.includes('TP53'))
+    : GENETIC_OPTIONS.filter(opt => opt.includes('APOE'))
+
   return (
     <div className="patient-overview-wrapper">
+
+      {/* Analysis Mode Selector */}
+      <div className="analysis-mode-selector card">
+        <div className="mode-tabs">
+          <button 
+            className={`mode-tab ${analysisMode === 'tumor' ? 'active' : ''}`}
+            onClick={() => setAnalysisMode('tumor')}
+          >
+          Brain Tumor Analysis
+          </button>
+          <button 
+            className={`mode-tab ${analysisMode === 'dementia' ? 'active' : ''}`}
+            onClick={() => setAnalysisMode('dementia')}
+          >
+            Dementia & Alzheimer's
+          </button>
+        </div>
+      </div>
 
       {/* Demographics */}
       <section className="demographics-section card">
         <div className="card-header">
           <span className="card-title">Patient Information</span>
+          <span className="badge badge-neutral">
+            {analysisMode === 'tumor' ? 'Tumor Profile' : 'Neuro-Cognitive Profile'}
+          </span>
         </div>
         <div className="card-body demographics-grid">
           <InfoField label="Patient Name">
@@ -248,28 +273,51 @@ export default function PatientOverview({ patient, onUpdate }) {
             </select>
           </InfoField>
 
-          <InfoField label="Handedness">
-            <select
-              value={patient.handedness || ''}
-              onChange={e => handleChange('handedness', e.target.value)}
-              className="demo-input"
-            >
-              <option value="">Select Handedness</option>
-              <option value="right">Right</option>
-              <option value="left">Left</option>
-              <option value="ambidextrous">Ambidextrous</option>
-            </select>
-          </InfoField>
+          {analysisMode === 'dementia' && (
+            <>
+              <InfoField label="Handedness">
+                <select
+                  value={patient.handedness || ''}
+                  onChange={e => handleChange('handedness', e.target.value)}
+                  className="demo-input"
+                >
+                  <option value="">Select Handedness</option>
+                  <option value="right">Right</option>
+                  <option value="left">Left</option>
+                  <option value="ambidextrous">Ambidextrous</option>
+                </select>
+              </InfoField>
 
-          <InfoField label="Education (Years)">
-            <input
-              type="number"
-              value={patient.education || ''}
-              onChange={e => handleChange('education', e.target.value)}
-              placeholder="e.g. 12"
-              className="demo-input"
-            />
-          </InfoField>
+              <InfoField label="Education (Years)">
+                <input
+                  type="number"
+                  value={patient.education || ''}
+                  onChange={e => handleChange('education', e.target.value)}
+                  placeholder="e.g. 12"
+                  className="demo-input"
+                />
+              </InfoField>
+
+              <InfoField label="Cardiovascular History">
+                <div className="radio-group">
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      checked={patient.cv_history === 'yes'}
+                      onChange={() => handleChange('cv_history', 'yes')}
+                    /> Yes
+                  </label>
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      checked={patient.cv_history === 'no'}
+                      onChange={() => handleChange('cv_history', 'no')}
+                    /> No
+                  </label>
+                </div>
+              </InfoField>
+            </>
+          )}
 
           <InfoField label="Genetic Biomarkers">
             <select
@@ -278,42 +326,25 @@ export default function PatientOverview({ patient, onUpdate }) {
               className="demo-input"
             >
               <option value="">Select Biomarker</option>
-              {GENETIC_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              {geneticOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
           </InfoField>
 
-          <InfoField label="Cardiovascular History">
-            <div className="radio-group">
-              <label className="radio-label">
-                <input
-                  type="radio"
-                  checked={patient.cv_history === 'yes'}
-                  onChange={() => handleChange('cv_history', 'yes')}
-                /> Yes
-              </label>
-              <label className="radio-label">
-                <input
-                  type="radio"
-                  checked={patient.cv_history === 'no'}
-                  onChange={() => handleChange('cv_history', 'no')}
-                /> No
-              </label>
-            </div>
-          </InfoField>
-
-          <InfoField label="Previous Cancers">
-            <div className="multi-select-chips">
-              {CANCER_OPTIONS.map(cancer => (
-                <button
-                  key={cancer}
-                  className={`chip-btn ${patient.cancer_history?.includes(cancer) ? 'active' : ''}`}
-                  onClick={() => toggleCancer(cancer)}
-                >
-                  {cancer}
-                </button>
-              ))}
-            </div>
-          </InfoField>
+          {analysisMode === 'tumor' && (
+            <InfoField label="Previous Cancers">
+              <div className="multi-select-chips">
+                {CANCER_OPTIONS.map(cancer => (
+                  <button
+                    key={cancer}
+                    className={`chip-btn ${patient.cancer_history?.includes(cancer) ? 'active' : ''}`}
+                    onClick={() => toggleCancer(cancer)}
+                  >
+                    {cancer}
+                  </button>
+                ))}
+              </div>
+            </InfoField>
+          )}
         </div>
       </section>
 
@@ -422,19 +453,23 @@ export default function PatientOverview({ patient, onUpdate }) {
               <>
                 <div className="mri-primary-badge">
                   <span className="badge badge-teal">
-                    Primary: <strong>{mriResults.primary_task}</strong>
+                    Primary: <strong>{analysisMode === 'tumor' ? 'Tumor Classification' : 'Alzheimer Staging'}</strong>
                   </span>
                 </div>
-                <ClassificationCard
-                  title="Alzheimer Staging"
-                  result={mriResults.alzheimer}
-                  accentVar="--teal-deep"
-                />
-                <ClassificationCard
-                  title="Brain Tumor Classification"
-                  result={mriResults.tumor}
-                  accentVar="--status-low"
-                />
+                {analysisMode === 'dementia' && (
+                  <ClassificationCard
+                    title="Alzheimer Staging"
+                    result={mriResults.alzheimer}
+                    accentVar="--teal-deep"
+                  />
+                )}
+                {analysisMode === 'tumor' && (
+                  <ClassificationCard
+                    title="Brain Tumor Classification"
+                    result={mriResults.tumor}
+                    accentVar="--status-low"
+                  />
+                )}
               </>
             ) : (
               <div className="mri-awaiting">
